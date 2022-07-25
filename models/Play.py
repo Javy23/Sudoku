@@ -101,12 +101,17 @@ class Play:
 
         resolver.setDisabled(True)
         mejores = []
+        peores = []
+        promedios = []
         soluciones = self.inicializacion()
         soluciones = self.verificar(soluciones)
         soluciones.sort(key=lambda x: x.fitness)
-        mejor = self.validar(soluciones, tablero)
+        mejor, peor, promedio = self.validar(soluciones)
+        mejores.append(mejor.getFitness())
+        peores.append(peor.getFitness())
+        promedios.append(promedio)
 
-        cont = 0
+        cont = 1
         while mejor.getFitness() != 162:
             seleccionados = self.seleccion(soluciones)
             cruza = self.cruza(seleccionados)
@@ -114,9 +119,13 @@ class Play:
             mutacion = self.verificar(mutacion)
             soluciones = self.poda(soluciones, mutacion)
             soluciones.sort(key=lambda x: x.fitness)
-            mejor = self.validar(soluciones, tablero)
+            mejor, peor, promedio = self.validar(soluciones)
             print(mejor.getFitness())
+            print(peor.getFitness())
+            print(promedio)
             mejores.append(mejor.getFitness())
+            peores.append(peor.getFitness())
+            promedios.append(promedio)
             cont += 1
             print(cont)
 
@@ -128,15 +137,19 @@ class Play:
                     tablero.item(i, j).setForeground(QBrush(QColor(0, 255, 0)))
                     indice += 1
 
-        self.graficar(mejores, cont)
+        self.graficar(mejores, cont, peores, promedios)
         nuevo.setDisabled(False)
 
-    def validar(self, soluciones, tablero):
+    def validar(self, soluciones):
 
         mejor = soluciones[-1]
+        peor = soluciones[0]
+
+        m = sum(p.getFitness() for p in soluciones)
+        promedio = int(m/len(soluciones))
         print("\n", mejor.getGenes())
 
-        return mejor
+        return mejor, peor, promedio
 
     def inicializacion(self):
 
@@ -247,12 +260,14 @@ class Play:
 
         return soluciones
 
-    def graficar(self, finales, cont):
+    def graficar(self, finales, cont, peores, promedios):
 
         epoca = range(cont)
 
         plt.subplot()
-        plt.plot(epoca, finales, label='Fitness')
+        plt.plot(epoca, finales, label='Mejores')
+        plt.plot(epoca, peores, label='Peores')
+        plt.plot(epoca, promedios, label='Promedio')
         plt.ylabel("Valor del Fitness")
         plt.xlabel("Generaciones")
         plt.title("Evolucion del Individuo")
